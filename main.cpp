@@ -1,3 +1,7 @@
+#include <cstdio>
+#include <vector>
+#include "mis.h"
+
 struct Node
 {
     int edge;
@@ -11,37 +15,46 @@ int main(const int argc, const char* argv[])
 {
     using namespace std;
 	
-    freopen(argv[1],"r",stdin);
-    //freopen("out.txt","w",stdout);
+    if (freopen(argv[1],"r",stdin) == nullptr) {
+		fprintf(stderr, "Cannot open file %s\n", argv[1]);
+		return 0;
+	}
 
-    //vector< vector<int> > connect;
+    vector< vector<int> > connect;
     //vector< vector<Node> > connect;
     vector<int> set;
 
     int Vnum, Enum;
+	bool fail_flag = false;
     while(scanf("%d %d", &Vnum, &Enum) == 2) {
         connect.resize(Vnum);
         for (auto& node : connect) { node.reserve(Vnum); }
 
         // set the edge connection by (a b) for convenience
-        for(int i = 0; i < Enum; ++i){
+        for(int i = 0; (i < Enum) && (!fail_flag); ++i){
             int from, to;
-            scanf("%d %d", &from, &to);
+            if (scanf("%d %d", &from, &to) != 2) { fail_flag = true; }
+			if (fail_flag) { break;}
             // set index start from 0
             --from;
             --to;
             connect[from].emplace_back(to);
             connect[to].emplace_back(from);
         }
+		if (fail_flag) {
+			fail_flag = false;
+			fprintf(stderr, "An incomplete input.\n");
+			continue;
+		}
 
-        // using greedy instead of A* to reduce the exponential time to polynomial time( N^2logN )
-        //findMIS(connect, set);
+        findMIS(connect, set);
         //findMIS(connect, set, [](const Node& node) -> int { return node.edge; } );
 
-        printf("It takes %lu vertex:", set.size());
+        printf("Maximum independent set (MIS) size: %lu\n", set.size());
+		printf("MIS vertices: ");
         for(size_t j = 0; j < set.size(); ++j )
             printf(" %d", set[j] + 1);
-        printf("\n\n");
+		putchar('\n');
     }
     return 0;
 }

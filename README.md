@@ -16,3 +16,5 @@ Sample Input.
 3 4
 
 This sample input describes a complete graph with 4 vertices.
+
+Another sample input is 'case.txt'
