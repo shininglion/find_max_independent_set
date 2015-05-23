@@ -6,10 +6,10 @@
 #ifdef TEST_USE_NODE
 struct Node
 {
-    int cost;
+    double cost;
 	std::vector<int> edge_list;
 };
-//#define TEST_COST
+#define TEST_COST
 #endif
 
 
@@ -41,8 +41,8 @@ int main(const int argc, const char* argv[])
 
 #ifdef TEST_COST
 		for (int i = 0; (i < Vnum) && (!fail_flag); ++i) {
-			int cost = 0;
-			if (scanf("%d", &cost) != 1) { fail_flag = true; break; }
+			double cost = 0;
+			if (scanf("%lf", &cost) != 1) { fail_flag = true; break; }
 			connect[i].cost = cost;
 		}
 #endif
@@ -70,16 +70,16 @@ int main(const int argc, const char* argv[])
 
 #ifdef TEST_USE_NODE
 #ifdef TEST_COST
-        const int cost = findMinCostMIS(connect, set, [](const Node& node) -> const std::vector<int>& { return node.edge_list; }, [](const Node& node) -> int { return node.cost; } );
+        const double cost = graph::findMinCostMIS(connect, set, [](const Node& node) -> const std::vector<int>& { return node.edge_list; }, [](const Node& node) -> double { return node.cost; } );
 #else
-        findMIS(connect, set, [](const Node& node) -> const std::vector<int>& { return node.edge_list; });
+		graph::findMIS(connect, set, [](const Node& node) -> const std::vector<int>& { return node.edge_list; });
 #endif
 #else
-        findMIS(connect, set);
+		graph::findMIS(connect, set);
 #endif
 
 #ifdef TEST_COST
-        printf("Maximum independent set (MIS) size and cost: %lu, %d\n", set.size(), cost);
+        printf("Maximum independent set (MIS) size and cost: %lu, %.3lf\n", set.size(), cost);
 #else
         printf("Maximum independent set (MIS) size: %lu\n", set.size());
 #endif
