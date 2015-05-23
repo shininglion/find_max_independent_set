@@ -1,7 +1,7 @@
+#include <cstdio>
 #include <limits>
 #include <algorithm>
-#include <iostream>
-
+#define ENABLE_TEST_MIS
 
 namespace graph
 {
@@ -26,6 +26,25 @@ namespace graph
 	}
 
 
+#ifdef ENABLE_TEST_MIS
+	template <typename T, typename EdgeExtractor>
+	inline bool testFeasibleMIS(const T& graph, const std::vector<int>& is, EdgeExtractor edge_extractor)
+	{
+		for (const int element : is) {
+			auto& node = graph[element];
+			auto& edge_list = edge_extractor(node);
+
+			for (const int other : is) {
+				if (other == element) { continue; }
+				if (find(begin(edge_list), end(edge_list), other) != end(edge_list)) { return false; }
+			}
+		}
+
+		return true;
+	}
+#endif
+
+
 	template <typename T, typename EdgeExtractor, typename CostExtractor>
 	auto findMinCostMIS(const T& graph, std::vector<int>& is, EdgeExtractor edge_extractor, CostExtractor cost_extractor) -> typename std::result_of<CostExtractor(const typename value_type<T>::type&)>::type
 	{
@@ -36,7 +55,6 @@ namespace graph
 		const int graph_size = distance( begin(graph), end(graph) );
 		is.clear();
 		
-		vector< vector<int> > net(graph_size);
 		// 'aff' records the number of vertices which will become forbidden at the moment ith-vertex is taken
 		// 'con' records the out-degree to untaken vertices
 		// 'dis' records the number of vertices which have become forbidden in routine testing
@@ -107,7 +125,6 @@ namespace graph
 				else if( (aff[lhs] - dis[lhs]) < (aff[rhs] - dis[rhs]) ) { return false; }
 				else if( con[lhs] >= con[rhs] ) { return true; }
 				return (cost[lhs] > cost[rhs]);
-				//return false;
 			};
 			auto greedy_comp2 = [&](const int lhs, const int rhs) -> bool {
 				if (forbid[lhs]) { return false; }
@@ -117,7 +134,6 @@ namespace graph
 				else if( aff[lhs] < aff[rhs] ) { return false; }
 				else if( con[lhs] >= con[rhs] ) { return true; }
 				return (cost[lhs] > cost[rhs]);
-				//return false;
 			};
 
 			
@@ -154,6 +170,11 @@ namespace graph
 				if( (take.size() > is.size()) || ((take.size() == is.size()) && (total_cost > cur_cost)) ) { is = take; total_cost = cur_cost; }
 			}
 		}
+
+#ifdef ENABLE_TEST_MIS
+		if (testFeasibleMIS(graph, is, edge_extractor)) { fprintf(stderr, "test MIS pass\n"); }
+		else { fprintf(stderr, "test MIS failed\n"); }
+#endif
 
 		return total_cost;
 	}
