@@ -1,7 +1,8 @@
-#include <cstdio>
 #include <limits>
 #include <algorithm>
-#define ENABLE_TEST_MIS
+#include <iostream>
+#include <functional>
+
 
 namespace graph
 {
@@ -26,25 +27,6 @@ namespace graph
 	}
 
 
-#ifdef ENABLE_TEST_MIS
-	template <typename T, typename EdgeExtractor>
-	inline bool testFeasibleMIS(const T& graph, const std::vector<int>& is, EdgeExtractor edge_extractor)
-	{
-		for (const int element : is) {
-			auto& node = graph[element];
-			auto& edge_list = edge_extractor(node);
-
-			for (const int other : is) {
-				if (other == element) { continue; }
-				if (find(begin(edge_list), end(edge_list), other) != end(edge_list)) { return false; }
-			}
-		}
-
-		return true;
-	}
-#endif
-
-
 	template <typename T, typename EdgeExtractor, typename CostExtractor>
 	auto findMinCostMIS(const T& graph, std::vector<int>& is, EdgeExtractor edge_extractor, CostExtractor cost_extractor) -> typename std::result_of<CostExtractor(const typename value_type<T>::type&)>::type
 	{
@@ -55,6 +37,7 @@ namespace graph
 		const int graph_size = distance( begin(graph), end(graph) );
 		is.clear();
 		
+		vector< vector<int> > net(graph_size);
 		// 'aff' records the number of vertices which will become forbidden at the moment ith-vertex is taken
 		// 'con' records the out-degree to untaken vertices
 		// 'dis' records the number of vertices which have become forbidden in routine testing
@@ -77,7 +60,7 @@ namespace graph
 		/* search the least out-degree */
 		int small = numeric_limits<int>::max();
 		for (auto element : con) {
-			if (element < small) { small = element; }
+			small = min(small, element);
 		}
 
 		
@@ -86,10 +69,7 @@ namespace graph
 		for(int node = 0; node < graph_size; ++node){
 
 			/* if the vertex had been taken or the vertex doesn't have least out-degree */
-			if( con[node] != small ){
-				++node;
-				continue;
-			}
+			if( con[node] != small ) { continue; }
 
 			// if forbid[i] is true, it means there are some neighboring vertices have been taken in routine testing
 			vector<bool> forbid(graph_size, false);
@@ -135,6 +115,7 @@ namespace graph
 				else if( con[lhs] >= con[rhs] ) { return true; }
 				return (cost[lhs] > cost[rhs]);
 			};
+			std::function<bool (const int, const int)> cmp_strategy[2] = {greedy_comp1, greedy_comp2};
 
 			
 			for (int sort_strategy = 0; sort_strategy < 2; ++sort_strategy) {
@@ -155,8 +136,7 @@ namespace graph
 				
 				/* start greedy strategy to decide maximum_is */
 				while( !que.empty() ){
-					if (sort_strategy == 0) { sort(que.begin(), que.end(), greedy_comp1); }
-					else { sort(que.begin(), que.end(), greedy_comp2); }
+					sort(que.begin(), que.end(), cmp_strategy[sort_strategy]);
 
 					while ( (!que.empty()) && (forbid[que.back()]) ) { que.pop_back(); }
 					if (que.empty()) { break; }
@@ -170,11 +150,6 @@ namespace graph
 				if( (take.size() > is.size()) || ((take.size() == is.size()) && (total_cost > cur_cost)) ) { is = take; total_cost = cur_cost; }
 			}
 		}
-
-#ifdef ENABLE_TEST_MIS
-		if (testFeasibleMIS(graph, is, edge_extractor)) { fprintf(stderr, "test MIS pass\n"); }
-		else { fprintf(stderr, "test MIS failed\n"); }
-#endif
 
 		return total_cost;
 	}
