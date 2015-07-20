@@ -69,7 +69,7 @@ namespace graph
 		for(int node = 0; node < graph_size; ++node){
 
 			/* if the vertex had been taken or the vertex doesn't have least out-degree */
-			if( con[node] != small ) { continue; }
+			//if( con[node] != small ) { continue; }
 
 			// if forbid[i] is true, it means there are some neighboring vertices have been taken in routine testing
 			vector<bool> forbid(graph_size, false);
