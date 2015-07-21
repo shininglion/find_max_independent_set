@@ -102,8 +102,8 @@ namespace graph
 				if (forbid[rhs]) { return true; }
 				
 				if( (aff[lhs] - dis[lhs]) > (aff[rhs] - dis[rhs]) ) { return true; }
-				else if( (aff[lhs] - dis[lhs]) < (aff[rhs] - dis[rhs]) ) { return false; }
-				else if( con[lhs] >= con[rhs] ) { return true; }
+				if( (aff[lhs] - dis[lhs]) < (aff[rhs] - dis[rhs]) ) { return false; }
+				if( con[lhs] >= con[rhs] ) { return true; }
 				return (cost[lhs] > cost[rhs]);
 			};
 			auto greedy_comp2 = [&](const int lhs, const int rhs) -> bool {
@@ -111,8 +111,8 @@ namespace graph
 				if (forbid[rhs]) { return true; }
 				
 				if( aff[lhs] > aff[rhs] ) { return true; }
-				else if( aff[lhs] < aff[rhs] ) { return false; }
-				else if( con[lhs] >= con[rhs] ) { return true; }
+				if( aff[lhs] < aff[rhs] ) { return false; }
+				if( con[lhs] >= con[rhs] ) { return true; }
 				return (cost[lhs] > cost[rhs]);
 			};
 			std::function<bool (const int, const int)> cmp_strategy[2] = {greedy_comp1, greedy_comp2};
@@ -136,7 +136,7 @@ namespace graph
 				
 				/* start greedy strategy to decide maximum_is */
 				while( !que.empty() ){
-					sort(que.begin(), que.end(), cmp_strategy[sort_strategy]);
+					stable_sort(que.begin(), que.end(), cmp_strategy[sort_strategy]);
 
 					while ( (!que.empty()) && (forbid[que.back()]) ) { que.pop_back(); }
 					if (que.empty()) { break; }
