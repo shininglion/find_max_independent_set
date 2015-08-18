@@ -2,6 +2,7 @@
 #include <vector>
 #include "mis.h"
 #define TEST_USE_NODE
+#define USE_NAIVE
 
 #ifdef TEST_USE_NODE
 struct Node
@@ -70,13 +71,33 @@ int main(const int argc, const char* argv[])
 
 #ifdef TEST_USE_NODE
 #ifdef TEST_COST
+#ifndef USE_NAIVE
         const double cost = graph::findMinCostMIS(connect, set, [](const Node& node) -> const std::vector<int>& { return node.edge_list; }, [](const Node& node) -> double { return node.cost; } );
 #else
-		graph::findMIS(connect, set, [](const Node& node) -> const std::vector<int>& { return node.edge_list; });
+        const double cost = graph::naiveMinCostMIS(connect, set, [](const Node& node) -> const std::vector<int>& { return node.edge_list; }, [](const Node& node) -> double { return node.cost; } );
 #endif
 #else
-		graph::findMIS(connect, set);
+#ifndef USE_NAIVE
+		graph::findMIS(connect, set, [](const Node& node) -> const std::vector<int>& { return node.edge_list; });
+#else
+		graph::naiveMIS(connect, set, [](const Node& node) -> const std::vector<int>& { return node.edge_list; });
 #endif
+#endif
+#else
+#ifndef USE_NAIVE
+		graph::findMIS(connect, set);
+#else
+		graph::naiveMIS(connect, set);
+#endif
+#endif
+
+		printf("Validate mis...");
+#ifdef TEST_USE_NODE
+		const bool legal = graph::validateMIS(connect, set, [](const Node& node) -> const std::vector<int>& { return node.edge_list; });
+#else
+		const bool legal = graph::validateMIS(connect, set);
+#endif
+		printf(legal ? "pass\n" : "fail\n");
 
 #ifdef TEST_COST
         printf("Maximum independent set (MIS) size and cost: %lu, %.3lf\n", set.size(), cost);

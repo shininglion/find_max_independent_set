@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <iostream>
 #include <functional>
+#include <unordered_set>
 
 
 namespace graph
@@ -154,5 +155,110 @@ namespace graph
 		return total_cost;
 	}
 
+
+	template <typename T, typename EdgeExtractor>
+	void naiveMIS(const T& graph, std::vector<int>& is, EdgeExtractor edge_extractor)
+	{
+		// find an MIS regardless of cost is equivalent to find a min-cost MIS with all the costs are 0.
+		naiveMinCostMIS(graph, is, edge_extractor, [](const typename value_type<T>::type&) -> int { return 0; } );
+	}
+
+
+	template <typename T>
+	inline void naiveMIS(const T& graph, std::vector<int>& is)
+	{
+		typedef typename value_type<T>::type NodeType;
+		naiveMIS(graph, is, value<NodeType>);
+	}
+
+
+	template <typename T, typename EdgeExtractor, typename CostExtractor>
+	auto naiveMinCostMIS(const T& graph, std::vector<int>& is, EdgeExtractor edge_extractor, CostExtractor cost_extractor) -> typename std::result_of<CostExtractor(const typename value_type<T>::type&)>::type
+	{
+		using namespace std;
+		typedef typename value_type<T>::type NodeType;
+		typedef typename result_of<CostExtractor(const NodeType&)>::type CostType;
+
+		const int graph_size = distance( begin(graph), end(graph) );
+		is.clear();
+		CostType total_cost = numeric_limits<CostType>::max();
+		
+		CostType temp_cost = CostType();
+		unordered_set<int> temp_is;
+		vector<bool> pick(graph_size, false);
+		
+		// check legality
+		auto is_feasible = [&](const int node) -> bool {
+			const auto& edge_list = edge_extractor( graph[node] ); 
+			for (auto& edge : edge_list) {
+				if (temp_is.find(edge) != temp_is.end()) { return false; }
+			}
+			return true;
+		};
+		
+		auto pick_node = [&](const int node, function<void (const int)> find_mic_cost_mis) {
+			pick[node] = true;
+			temp_is.emplace(node);
+			temp_cost += cost_extractor( graph[node] );
+			
+			find_mic_cost_mis(node);
+			
+			pick[node] = false;
+			temp_is.erase(node);
+			temp_cost -= cost_extractor( graph[node] );
+		};
+		
+		// using recursion to find a mis with given starting node
+		function<void (const int)> findMicCostMIS = [&](const int node) {
+			if ((temp_is.size() <= is.size()) && (temp_cost >= total_cost)) { return; }
+			
+			for (int i = 0; i < graph_size; ++i) {
+				if (pick[i]) { continue; }
+				if ( !is_feasible(i) ) { continue; }
+				pick_node(i, findMicCostMIS);
+			}
+			
+			if ((temp_is.size() > is.size()) || ((temp_is.size() == is.size()) && (temp_cost < total_cost))) {
+				is.clear();
+				for_each(temp_is.cbegin(), temp_is.cend(), [&](int val) { is.push_back(val); } );
+				total_cost = temp_cost;
+			}
+		};
+		
+		// enumerate every node as starting node
+		for (int i = 0; i < graph_size; ++i) {
+			fill(pick.begin(), pick.end(), false);
+			pick_node(i, findMicCostMIS);
+		}
+		
+
+		return total_cost;
+	}
+
+
+	template <typename T, typename EdgeExtractor>
+	bool validateMIS(const T& graph, const std::vector<int>& mis, EdgeExtractor edge_extractor)
+	{
+		bool pass = true;
+		for (size_t i = 0; pass && (i < mis.size()); ++i) {
+			for (size_t j = i + 1; j < mis.size(); ++j) {
+				auto& edge_list = edge_extractor( graph[ mis[j] ] );
+
+				bool check = false;
+				for (auto& edge : edge_list) {
+					if (edge == mis[i]) { check = true; break; }
+				}
+				if (check) { pass = false; break; }
+			}
+		}
+		return pass;
+	}
+
+	template <typename T>
+	bool validateMIS(const T& graph, const std::vector<int>& mis)
+	{
+		typedef typename value_type<T>::type NodeType;
+		return validateMIS(graph, mis, value<NodeType>);
+	}
 }
 
