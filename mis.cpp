@@ -196,7 +196,7 @@ namespace graph
 			return true;
 		};
 		
-		auto pick_node = [&](const int node, function<void (const int)> find_mic_cost_mis) {
+		auto pick_node = [&](const int node, function<void (const int)>& find_mic_cost_mis) {
 			pick[node] = true;
 			temp_is.emplace(node);
 			temp_cost += cost_extractor( graph[node] );
@@ -210,8 +210,6 @@ namespace graph
 		
 		// using recursion to find a mis with given starting node
 		function<void (const int)> findMicCostMIS = [&](const int node) {
-			if ((temp_is.size() <= is.size()) && (temp_cost >= total_cost)) { return; }
-			
 			for (int i = 0; i < graph_size; ++i) {
 				if (pick[i]) { continue; }
 				if ( !is_feasible(i) ) { continue; }
@@ -219,7 +217,7 @@ namespace graph
 			}
 			
 			if ((temp_is.size() > is.size()) || ((temp_is.size() == is.size()) && (temp_cost < total_cost))) {
-				is.clear();
+				is.clear(); is.reserve(temp_is.size());
 				for_each(temp_is.cbegin(), temp_is.cend(), [&](int val) { is.push_back(val); } );
 				total_cost = temp_cost;
 			}

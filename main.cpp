@@ -72,8 +72,10 @@ int main(const int argc, const char* argv[])
 #ifdef TEST_USE_NODE
 #ifdef TEST_COST
 #ifndef USE_NAIVE
+		printf("use greedy heuristic...\n");
         const double cost = graph::findMinCostMIS(connect, set, [](const Node& node) -> const std::vector<int>& { return node.edge_list; }, [](const Node& node) -> double { return node.cost; } );
 #else
+		printf("use naive approach...\n");
         const double cost = graph::naiveMinCostMIS(connect, set, [](const Node& node) -> const std::vector<int>& { return node.edge_list; }, [](const Node& node) -> double { return node.cost; } );
 #endif
 #else
